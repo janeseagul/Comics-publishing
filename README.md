@@ -12,6 +12,10 @@
    VK_ACCESS_TOKEN=<ваш access token>  
    VK_CLIENT_ID=<id вашего приложения>
    ```
+   
+3. Установите зависимости командой 
+
+   `pip3 install -r -requirements.txt` 
 3. Запустите скрипт командой 
    
    `python main.py`
