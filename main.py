@@ -90,7 +90,7 @@ def publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment):
 
 if __name__ == '__main__':
     load_dotenv()
-    group_id = os.environ['VK_CLIENT_ID']
+    group_id = os.environ['VK_GROUP_ID']
     vk_token = os.environ['VK_ACCESS_TOKEN']
     img_filename, comment = download_random_comics()
     try:
