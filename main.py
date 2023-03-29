@@ -7,6 +7,11 @@ from pathlib import Path
 
 from pprint import pprint
 
+class VkException(Exception):
+
+    def __init__(self, text):
+        self.txt = text
+
 
 def download_random_comics():
     """Скачивает случайный комикс с сайта https"//xkcd.com"""
@@ -16,6 +21,7 @@ def download_random_comics():
     accidental_comics = random.randint(1, last_comics)
     url = f'https://xkcd.com/{accidental_comics}/info.0.json'
     response = requests.get(url)
+    response.raise_for_status()
     comic_ingredients = response.json()
     img_url = comic_ingredients['img']
     img_path = urlparse(img_url).path
@@ -39,6 +45,7 @@ def get_upload_url(vk_token, group_id):
         'v': 5.131,
     }
     response = requests.get(url, params=params).json()
+    response.raise_for_status()
 
     return response['response']['upload_url']
 
@@ -50,6 +57,7 @@ def upload_photo_to_server(upload_url, img_filename):
             'photo': file,
             }
         response = requests.post(upload_url, files=vk_file)
+        response.raise_for_status()
     response_params = response.json()
     photo = response_params["photo"]
     server = response_params["server"]
@@ -86,11 +94,12 @@ def publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment):
         'v': 5.131
     }
     response = requests.get(url, params=params)
+    response.raise_for_status()
     return response.json()
 
 if __name__ == '__main__':
     load_dotenv()
-    group_id = os.environ['VK_CLIENT_ID']
+    group_id = os.environ['VK_GROUP_ID']
     vk_token = os.environ['VK_ACCESS_TOKEN']
     img_filename, comment = download_random_comics()
     try:
@@ -100,6 +109,8 @@ if __name__ == '__main__':
                                              vk_hash, server)
         post_id = publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment)
         pprint (post_id)
+    except VKException as error:
+        print(error)
     finally:
         if os.path.isfile(img_filename):
             os.remove(img_filename)
