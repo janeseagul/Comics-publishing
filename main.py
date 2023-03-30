@@ -58,6 +58,7 @@ def upload_photo_to_server(upload_url, img_filename):
             }
         response = requests.post(upload_url, files=vk_file)
         response.raise_for_status()
+        file.close()
     response_params = response.json()
     photo = response_params["photo"]
     server = response_params["server"]
@@ -77,6 +78,7 @@ def save_wall_photo(vk_token, group_id, vk_hash, server):
         'v': 5.131
     }
     savewall_response = requests.post(url, params=params).json()
+    savewall_response.raise_for_status()
     owner_id = savewall_response['response'][0]['owner_id']
     media_id = savewall_response['response'][0]['id']
     return owner_id, media_id
@@ -97,6 +99,7 @@ def publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment):
     response.raise_for_status()
     return response.json()
 
+
 if __name__ == '__main__':
     load_dotenv()
     group_id = os.environ['VK_GROUP_ID']
@@ -109,7 +112,7 @@ if __name__ == '__main__':
                                              vk_hash, server)
         post_id = publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment)
         pprint (post_id)
-    except VKException as error:
+    except VkException as error:
         print(error)
     finally:
         if os.path.isfile(img_filename):
