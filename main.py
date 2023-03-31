@@ -7,10 +7,13 @@ from pathlib import Path
 
 from pprint import pprint
 
-class VkException(Exception):
-
-    def __init__(self, text):
-        self.txt = text
+def catch_vk_api_exception(response):
+    vk_api_error = response.json().get('error')
+    if vk_api_error:
+        error_code = vk_api_error['error_code']
+        error_msg = vk_api_error['error_msg']
+        error_description = f'Error {error_code}: {error_msg}'
+        raise requests.HTTPError(error_description)
 
 
 def download_random_comics():
@@ -44,10 +47,12 @@ def get_upload_url(vk_token, group_id):
         'access_token': vk_token,
         'v': 5.131,
     }
-    response = requests.get(url, params=params).json()
+    response = requests.get(url, params=params)
     response.raise_for_status()
+    catch_vk_api_exception(response)
+    upload_response = response.json()
 
-    return response['response']['upload_url']
+    return upload_response['response']['upload_url']
 
 
 def upload_photo_to_server(upload_url, img_filename):
@@ -57,8 +62,8 @@ def upload_photo_to_server(upload_url, img_filename):
             'photo': file,
             }
         response = requests.post(upload_url, files=vk_file)
-        response.raise_for_status()
-        file.close()
+    response.raise_for_status()
+    catch_vk_api_exception(response)
     response_params = response.json()
     photo = response_params["photo"]
     server = response_params["server"]
@@ -77,8 +82,11 @@ def save_wall_photo(vk_token, group_id, vk_hash, server):
         'server': server,
         'v': 5.131
     }
-    savewall_response = requests.post(url, params=params).json()
-    savewall_response.raise_for_status()
+    response = requests.post(url, params=params)
+    response.raise_for_status()
+    catch_vk_api_exception(response)
+    savewall_response = response.json()
+
     owner_id = savewall_response['response'][0]['owner_id']
     media_id = savewall_response['response'][0]['id']
     return owner_id, media_id
@@ -97,6 +105,7 @@ def publish_comic_to_vk(vk_token, group_id, owner_id, media_id, comment):
     }
     response = requests.get(url, params=params)
     response.raise_for_status()
+    catch_vk_api_exception(response)
     return response.json()
 
 
